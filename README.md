@@ -5,7 +5,7 @@
  1. 安装包文件
 
 	``` bash
-	$ composer require jormin/baidu-speech
+	$ composer require nufangtechnology/baidu_ai
 	```
 
 ## 说明
