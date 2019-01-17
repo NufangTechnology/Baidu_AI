@@ -15,7 +15,7 @@
 * the License.
 */
 
-namespace NufangTechnology\Baidu_AI\Libs;
+namespace NufangTechnology\BaiduAi\Libs;
 
 /**
  * BCE Util

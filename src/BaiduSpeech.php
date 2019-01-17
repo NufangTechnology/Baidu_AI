@@ -1,8 +1,8 @@
 <?php
 
-namespace NufangTechnology\Baidu_AI;
+namespace NufangTechnology\BaiduAi;
 
-use NufangTechnology\Baidu_AI\Libs\AipSpeech;
+use NufangTechnology\BaiduAi\Libs\AipSpeech;
 
 /**
  * 百度语音SDK库
