@@ -58,10 +58,6 @@ class BaiduSpeech{
             $return['msg'] = '采样率错误，当前支持8000或者16000';
             return $return;
         }
-        if(!in_array($lan, ['zh', 'ct', 'en'])){
-            $return['msg'] = '语言错误，当前支持中文(zh)、粤语(ct)、英文(en)';
-            return $return;
-        }
         $aipSpeech = new AipSpeech($this->appID, $this->apiKey, $this->secretKey);
         $options = [
             'dev_pid' => $dev_pid
