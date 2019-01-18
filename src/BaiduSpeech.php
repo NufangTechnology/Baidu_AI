@@ -36,10 +36,10 @@ class BaiduSpeech{
      * @param $userID string 用户唯一标识
      * @param $format string 语音文件格式 ['pcm', 'wav', 'opus', 'speex', 'amr']
      * @param $rate integer 采样率 [8000, 16000]
-     * @param $lan string 语音 ['zh', 'ct', 'en']
+     * @param $dev_pid string 模型id 1537:普通话(纯中文识别)  1536：	普通话(支持简单的英文识别) 1737：英语 1637:粤语  1837：四川话
      * @return array
      */
-    public function recognize($filePath, $url, $callback, $userID=null, $format='wav', $rate=16000, $lan='zh')
+    public function recognize($filePath, $url, $callback, $userID=null, $format='wav', $rate=16000, $dev_pid=1537)
     {
         $return = ['success'=>false, 'msg'=>'网络超时'];
         if(!$filePath && !$url){
@@ -64,8 +64,7 @@ class BaiduSpeech{
         }
         $aipSpeech = new AipSpeech($this->appID, $this->apiKey, $this->secretKey);
         $options = [
-//            'lan' => $lan,
-            'dev_pid' => 1536
+            'dev_pid' => $dev_pid
         ];
         if(!$filePath && $url){
             $options['url'] = $url;
