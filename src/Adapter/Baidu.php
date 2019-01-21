@@ -1,4 +1,5 @@
 <?php
+
 namespace NFTech\ASR\Adapter;
 
 use NFTech\ASR\AsrInterface;
@@ -115,17 +116,17 @@ class Baidu implements AsrInterface
         // 特殊处理
         $client = new Client('vop.baidu.com');
         $client->set(
-                 [
-                 'buffer_output_size' => 32 * 1024 * 1024,
-                 'package_max_length' => 1024 * 1024 * 2,
-                 'socket_buffer_size' => 1024 * 1024 * 2, //2M缓存区
-                 ]
-                    );
+            [
+                'buffer_output_size' => 32 * 1024 * 1024,
+                'package_max_length' => 1024 * 1024 * 2,
+                'socket_buffer_size' => 1024 * 1024 * 2, //2M缓存区
+            ]
+        );
         $client->setHeaders(
-                        [
-                        'Content-Type' => 'application/json'
-                        ]
-                           );
+            [
+                'Content-Type' => 'application/json'
+            ]
+        );
         $client->post('/server_api', json_encode($options));
         $client->close();
 
@@ -134,7 +135,7 @@ class Baidu implements AsrInterface
 
         // 获取结果失败
         if (!is_array($result)) {
-            throw new Exception('获取音频转换结果失败');
+            throw new Exception('获取音频转换结果失败：' . $client->body);
         }
         // 转换出错
         if ($result['err_no'] > 0) {
@@ -164,7 +165,7 @@ class Baidu implements AsrInterface
                     'client_secret' => $this->secretKey,
                 ]
             );
-            $client = new Client('aip.baidubce.com');
+            $client   = new Client('aip.baidubce.com');
             $client->get('/oauth/2.0/token?' . $queryStr);
             $client->close();
 
