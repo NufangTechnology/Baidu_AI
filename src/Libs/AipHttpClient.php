@@ -59,28 +59,47 @@ class AipHttpClient{
         $url = $this->buildUrl($url, $params);
         $headers = array_merge($this->headers, $this->buildHeaders($headers));
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, is_array($data) ? http_build_query($data) : $data);
-        curl_setopt($ch, CURLOPT_TIMEOUT_MS, $this->socketTimeout);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, $this->connectTimeout);
-        $content = curl_exec($ch);
-        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $chan = new Channel(1);
 
-        if($code === 0){
-            throw new Exception(curl_error($ch));
+        go(function () use ($chan, $url, $data, $headers) {
+
+            $ch = curl_init();
+
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_HEADER, false);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+            curl_setopt($ch, CURLOPT_TIMEOUT_MS, $this->socketTimeout);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, $this->connectTimeout);
+
+            // 获取结果
+            $content = curl_exec($ch);
+            $code    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+            // 关闭连接
+            curl_close($ch);
+
+            // 投递处理结果
+            $chan->push(
+                [
+                    'code'    => $code,
+                    'content' => $content,
+                    'error'   => curl_error($ch)
+                ]
+            );
+        });
+
+        // 阻塞，等待上方投递数据结果
+        $item = $chan->pop();
+        // 请求失败
+        if($item['code'] === 0){
+            throw new Exception($item['error']);
         }
 
-        curl_close($ch);
-        return array(
-            'code' => $code,
-            'content' => $content,
-        );
+        return $item;
     }
 
     /**

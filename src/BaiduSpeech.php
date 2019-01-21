@@ -3,6 +3,7 @@
 namespace NufangTechnology\BaiduAi;
 
 use NufangTechnology\BaiduAi\Libs\AipSpeech;
+use Swoole\Coroutine;
 
 /**
  * 百度语音SDK库
@@ -71,7 +72,11 @@ class BaiduSpeech{
         if($userID){
             $options['cuid'] = $userID;
         }
-        $response = $aipSpeech->asr($filePath ? file_get_contents($filePath) : null, $format, $rate, $options);
+
+        // FIXME: 读取失败时返回 false，做错误处理
+        $content = Coroutine::readFile($filePath);
+
+        $response = $aipSpeech->asr($content, $format, $rate, $options);
         if($response['err_no'] == 0){
             $return = [
                 'success' => true,
