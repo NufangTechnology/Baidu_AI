@@ -17,7 +17,6 @@
 
 namespace NufangTechnology\BaiduAi\Libs;
 
-use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 
 /**
@@ -81,6 +80,7 @@ class AipHttpClient{
             // 获取结果
             $content = curl_exec($ch);
             $code    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error   = curl_error($ch);
 
             // 关闭连接
             curl_close($ch);
@@ -90,7 +90,7 @@ class AipHttpClient{
                 [
                     'code'    => $code,
                     'content' => $content,
-                    'error'   => curl_error($ch)
+                    'error'   => $error
                 ]
             );
         });
