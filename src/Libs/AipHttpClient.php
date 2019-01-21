@@ -17,7 +17,9 @@
 
 namespace NufangTechnology\BaiduAi\Libs;
 
+use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
+use Swoole\Coroutine\Http\Client;
 
 /**
  * Http Client
@@ -60,14 +62,60 @@ class AipHttpClient{
     public function post($url, $data=array(), $params=array(), $headers=array()){
         $url = $this->buildUrl($url, $params);
         $headers = array_merge($this->headers, $this->buildHeaders($headers));
+        
+//        file_put_contents(__DIR__ . '/data.log', $data);
 
-        $chan = new Channel(1);
+//        $client = new Client('vop.baidu.com');
+//        $client = new Client('192.168.0.254', 8014);
+////        $client = new Client('127.0.0.1', 8001);
+//        $client->set(
+//            [
+//                'buffer_output_size' => 32 * 1024 *1024,
+//                'package_max_length' => 1024 * 1024 * 2,
+//            ]
+//        );
+////        $data = json_decode(file_get_contents(__DIR__ . '/data.log'), true);
+////        unset($data['speech']);
+////        $client->setData($data);
+////        $client->post('/server_api', [$data => '']);
+//        $client->setDefer();
+//        $client->post('/demo/post', [$data => '']);
+//        $body = $client->recv();
+////        $client->post('/receive.php', [$data => '']);
+//
+//        print_r($client->statusCode);
+//        print_r($client->errCode);
+//        print_r($client->errMsg);
+//
+//        file_put_contents(__DIR__ . '/co-content.log', $client->body);
 
-        go(function () use ($chan, $url, $data, $headers) {
+//        print_r($client);
+        
+//        exit();
+
+        $file = __DIR__ . '/data.json';
+        $cmd = "curl -X POST http://vop.baidu.com/server_api -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d @$file";
+        
+        $body = Coroutine::exec($cmd);
+//        print_r($body);
+
+        return [
+            'code'    => 0,
+            'content' => $body['output'],
+        ];
+//        return json_decode($body['output'], true);
+//        file_put_contents(__DIR__ . '/shell_exec.log', json_encode($body));
+//        exit();
+
+
+
+//        $chan = new Channel(1);
+
+//        go(function () use ($chan, $url, $data, $headers) {
 
             $ch = curl_init();
 
-            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_URL, 'http://192.168.0.254:8014/demo/post');
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_HEADER, false);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -81,19 +129,25 @@ class AipHttpClient{
             $content = curl_exec($ch);
             $code    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error   = curl_error($ch);
+            
+//            print_r($content);
+            
+            file_put_contents(__DIR__ . '/curl-content.log', $content);
 
             // 关闭连接
             curl_close($ch);
+            
+            exit();
 
             // 投递处理结果
-            $chan->push(
-                [
-                    'code'    => $code,
-                    'content' => $content,
-                    'error'   => $error
-                ]
-            );
-        });
+//            $chan->push(
+//                [
+//                    'code'    => $code,
+//                    'content' => $content,
+//                    'error'   => $error
+//                ]
+//            );
+//        });
 
         // 阻塞，等待上方投递数据结果
         $item = $chan->pop();
