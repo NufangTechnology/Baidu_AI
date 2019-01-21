@@ -17,6 +17,9 @@
 
 namespace NufangTechnology\BaiduAi\Libs;
 
+use Swoole\Coroutine;
+use Swoole\Coroutine\Channel;
+
 /**
  * Http Client
  */
