@@ -122,9 +122,10 @@ class Baidu implements AsrInterface
         $client = new Client('vop.baidu.com');
         $client->set(
             [
+                'timeout'            => 10, // 请求超时时间
                 'buffer_output_size' => 32 * 1024 * 1024,
                 'package_max_length' => 1024 * 1024 * 2,
-                'socket_buffer_size' => 1024 * 1024 * 2, //2M缓存区
+                'socket_buffer_size' => 1024 * 1024 * 5, //2M缓存区
             ]
         );
         $client->setHeaders(
@@ -171,6 +172,11 @@ class Baidu implements AsrInterface
                 ]
             );
             $client   = new Client('aip.baidubce.com');
+            $client->set(
+                [
+                    'timeout' => 3, // 请求超时时间
+                ]
+            );
             $client->get('/oauth/2.0/token?' . $queryStr);
             $client->close();
 
