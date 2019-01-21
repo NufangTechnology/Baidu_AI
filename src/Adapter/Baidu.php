@@ -4,6 +4,7 @@ namespace NFTech\ASR\Adapter;
 
 use NFTech\ASR\AsrInterface;
 use NFTech\ASR\Exception;
+use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client;
 
 /**
@@ -61,12 +62,12 @@ class Baidu implements AsrInterface
      * 语音识别
      *
      * @param $filePath string 语音文件本地路径,优先使用此项
-     * @param $userID string 用户唯一标识
      * @param $format string 语音文件格式 ['pcm', 'wav', 'opus', 'speex', 'amr']
      * @param $rate integer 采样率 [8000, 16000]
      * @param int $dev_pid string 模型id 1537:普通话(纯中文识别)  1536：    普通话(支持简单的英文识别) 1737：英语 1637:粤语  1837：四川话
      * @return array
      * @throws BaiduException
+     * @throws Exception
      */
     public function recognize(string $filePath, $format = 'wav', $rate = 16000, $dev_pid = 1537)
     {
@@ -192,69 +193,6 @@ class Baidu implements AsrInterface
         }
 
         return $this->authInfo;
-    }
-
-    /**
-     * 处理请求参数
-     * @param string $url
-     * @param array $params
-     * @param array $data
-     * @param array $headers
-     */
-    protected function processRequest(string $url, array &$params, array &$data, $headers)
-    {
-        $token        = isset($params['access_token']) ? $params['access_token'] : '';
-        $data['cuid'] = md5($token);
-
-        if ($url === $this->asrUrl) {
-            $data['token'] = $token;
-            $data          = json_encode($data);
-        } else {
-            $data['tok'] = $token;
-        }
-
-        unset($params['access_token']);
-    }
-
-    /**
-     * @param  string $method HTTP method
-     * @param  string $url
-     * @param  array $param 参数
-     * @return array
-     */
-    private function getAuthHeaders($method, $url, $params = array(), $headers = array())
-    {
-
-        //不是云的老用户则不用在header中签名 认证
-        if ($this->isCloudUser === false) {
-            return $headers;
-        }
-
-        $obj = parse_url($url);
-        if (!empty($obj['query'])) {
-            foreach (explode('&', $obj['query']) as $kv) {
-                if (!empty($kv)) {
-                    list($k, $v) = explode('=', $kv, 2);
-                    $params[$k] = $v;
-                }
-            }
-        }
-
-        //UTC 时间戳
-        $timestamp             = gmdate('Y-m-d\TH:i:s\Z');
-        $headers['Host']       = isset($obj['port']) ? sprintf('%s:%s', $obj['host'], $obj['port']) : $obj['host'];
-        $headers['x-bce-date'] = $timestamp;
-
-        //签名
-        $headers['authorization'] = AipSampleSigner::sign(array(
-            'ak' => $this->apiKey,
-            'sk' => $this->secretKey,
-        ), $method, $obj['path'], $headers, $params, array(
-            'timestamp'     => $timestamp,
-            'headersToSign' => array_keys($headers),
-        ));
-
-        return $headers;
     }
 }
 
