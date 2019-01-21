@@ -6,6 +6,11 @@ use NFTech\ASR\AsrInterface;
 use NFTech\ASR\Exception;
 use Swoole\Coroutine\Http\Client;
 
+/**
+ * 百度语音转文字
+ *
+ * @package NFTech\ASR\Adapter
+ */
 class Baidu implements AsrInterface
 {
     /**
@@ -76,8 +81,7 @@ class Baidu implements AsrInterface
         }
 
         // 异步读取文件
-//        $content = Coroutine::readFile($filePath);
-        $content = file_get_contents($filePath);
+        $content = Coroutine::readFile($filePath);
         if ($content == false) {
             throw new BaiduException('音频文件[' . $filePath . ']读取失败');
         }
@@ -135,7 +139,7 @@ class Baidu implements AsrInterface
 
         // 获取结果失败
         if (!is_array($result)) {
-            throw new Exception('获取音频转换结果失败：' . $client->body);
+            throw new Exception('获取音频转换结果失败：' . $client->statusCode . ' | ' . $client->body . ' | ' . $client->errMsg, $client->errCode);
         }
         // 转换出错
         if ($result['err_no'] > 0) {
@@ -176,8 +180,8 @@ class Baidu implements AsrInterface
             if (isset($result['error'])) {
                 throw new Exception('身份认证失败：' . $result['error_description']);
             }
-            //
-            if (stripos('brain_all_scope', $result['scope'])) {
+            // 应该是所有权限的意思（百度文档没有描述）
+            if (stripos($result['scope'], 'brain_all_scope') === false) {
                 $this->isCloudUser = true;
             }
 
