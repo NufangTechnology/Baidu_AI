@@ -6,6 +6,11 @@ use NFTech\ASR\AsrInterface;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client;
 
+/**
+ * 百度语音转文字
+ *
+ * @package NFTech\ASR\Adapter
+ */
 class Baidu implements AsrInterface
 {
     /**
@@ -115,9 +120,10 @@ class Baidu implements AsrInterface
         $client = new Client('vop.baidu.com');
         $client->set(
             [
-                'buffer_output_size' => 32 * 1024 * 1024,
-                'package_max_length' => 1024 * 1024 * 2,
-                'socket_buffer_size' => 1024 * 1024 * 2, //2M缓存区
+                'timeout'            => 10, // 请求超时时间(10秒)
+                'buffer_output_size' => 2097152,
+                'package_max_length' => 2097152,
+                'socket_buffer_size' => 2097152, //2M缓存区
             ]
         );
         $client->setHeaders(
@@ -133,7 +139,7 @@ class Baidu implements AsrInterface
 
         // 获取结果失败
         if (!is_array($result)) {
-            throw new BaiduException('获取音频转换结果失败：' . $client->statusCode . ' | ' . $client->body . ' | ' . $client->errMsg, $client->errCode);
+            throw new BaiduException('获取音频转换结果失败：statusCode - ' . $client->statusCode . ' | body - ' . $client->body . ' | errorMsg - ' . $client->errMsg, $client->errCode);
         }
         // 转换出错
         if ($result['err_no'] > 0) {
@@ -164,6 +170,11 @@ class Baidu implements AsrInterface
                 ]
             );
             $client   = new Client('aip.baidubce.com');
+            $client->set(
+                [
+                    'timeout' => 3, // 请求超时时间
+                ]
+            );
             $client->get('/oauth/2.0/token?' . $queryStr);
             $client->close();
 
@@ -174,9 +185,8 @@ class Baidu implements AsrInterface
             if (isset($result['error'])) {
                 throw new BaiduException('身份认证失败：' . $result['error_description']);
             }
-
-            // 云用户
-            if (stripos('brain_all_scope', $result['scope'])) {
+            // 应该是所有权限的意思（百度文档没有描述）
+            if (stripos($result['scope'], 'brain_all_scope') === false) {
                 $this->isCloudUser = true;
             }
 
