@@ -139,11 +139,11 @@ class Baidu implements AsrInterface
 
         // 获取结果失败
         if (!is_array($result)) {
-            throw new BaiduException('获取音频转换结果失败：statusCode - ' . $client->statusCode . ' | body - ' . $client->body . ' | errorMsg - ' . $client->errMsg, $client->errCode);
+            throw new BaiduException('获取音频转换结果失败：statusCode - ' . $client->statusCode . ' | body - ' . $client->body . ' | errorMsg - ' . $client->errMsg, 500900);
         }
         // 转换出错
         if ($result['err_no'] > 0) {
-            throw new BaiduException($result['err_msg'], $result['err_no']);
+            throw new BaiduException('语音识别失败，请重试：' . $result['err_no'] . ' - ' . $result['err_msg'], 500900);
         }
 
         return $result['result'];
