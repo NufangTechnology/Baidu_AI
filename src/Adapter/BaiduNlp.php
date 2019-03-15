@@ -77,7 +77,7 @@ class BaiduNlp implements AsrInterface
         return $this->request(
             [
                 'text'    =>   $text,
-                'token'   => $this->authInfo['access_token']
+                'access_token'   => $this->authInfo['access_token']
             ]
         );
     }
@@ -96,7 +96,7 @@ class BaiduNlp implements AsrInterface
         }
 
         // 特殊处理
-        $client = new Client('aip.baidubce.com');
+        $client = new Client('aip.baidubce.com',443,true);
         $client->set(
             [
                 'timeout'            => 10, // 请求超时时间(10秒)
@@ -107,27 +107,23 @@ class BaiduNlp implements AsrInterface
                 'Content-Type' => 'application/json'
             ]
         );
-        $client->setBody(
-            [
-                'text' => $options['text']
-            ]
-        );
-        $client->post('/rpc/2.0/nlp/v1/sentiment_classify', json_encode($options));
+        $data['text']=$options['text'];
+        $data=mb_convert_encoding(json_encode($data), 'GBK', 'UTF8');
+
+        $client->post('/rpc/2.0/nlp/v1/sentiment_classify?access_token='.$options['access_token'], $data);
         $client->close();
 
         // 提取结果
-        $result = json_decode($client->body, true);
-
-        // 获取结果失败
+        $result = json_decode(mb_convert_encoding($client->body, 'UTF8', 'GBK'), true);
         if (!is_array($result)) {
-            throw new BaiduException('获取音频转换结果失败：statusCode - ' . $client->statusCode . ' | body - ' . $client->body . ' | errorMsg - ' . $client->errMsg, 500900);
+            throw new BaiduException('获取结果失败：statusCode - ' . $client->statusCode . ' | body - ' . $client->body . ' | errorMsg - ' . $client->errMsg, 500900);
         }
         // 转换出错
         if ($result['err_no'] > 0) {
-            throw new BaiduException('语音识别失败，请重试：' . $result['err_no'] . ' - ' . $result['err_msg'], 500900);
+            throw new BaiduException('情感识别失败，请重试：' . $result['err_no'] . ' - ' . $result['err_msg'], 500900);
         }
-
-        return $result['result'];
+//
+        return $result;
     }
 
     /**
